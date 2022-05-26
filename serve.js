@@ -79,16 +79,31 @@ app.get("/read/single/:email", async (req, res) => {
 
 // UPDATE data
 app.patch("/update/:id", async (req, res) => {
-    const id = req.params.id;
+    const newid = req.params.id;
     const newPassword = req.body.newPassword;
 
     try {
-        connection.query("UPDATE users SET password = ? WHERE id = ?", [newPassword, id], (err, results, fields) => {
+
+        connection.query("SELECT * FROM users WHERE id = ?", [newid], (err, results, fields) => {
             if (err) {
                 console.log(err);
                 return res.status(400).send();
             }
-            res.status(200).json({ message: "updated ข้อมูลสำเร็จ"});
+            if(results.length > 0){
+                if(newPassword === ''){
+                    return res.status(200).json({ message: "ไม่มีข้อมูลที่จะ updated"});
+                }else{
+                    connection.query("UPDATE users SET password = ? WHERE id = ?", [newPassword, newid], (err, results, fields) => {
+                        if (err) {
+                            console.log(err);
+                            return res.status(400).send();
+                        }
+                        res.status(200).json({ message: "updated ข้อมูลสำเร็จ"});
+                    })
+                }
+            }else{
+                return res.json({message: 'ไม่มี ID นี้!!'});
+            }
         })
     } catch(err) {
         console.log(err);
